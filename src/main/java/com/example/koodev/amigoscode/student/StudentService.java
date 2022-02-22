@@ -9,24 +9,37 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class StudentService {
 
 
+    private final StudentRepository studentRepository;
+
+    @Autowired
+    public StudentService(StudentRepository studentRepository) {
+        this.studentRepository = studentRepository;
+    }
 
     public List<Student> getStudents() {
-        return List.of(new Student(
-                "Adam",
-                21,
-                LocalDate.of(2001, 12, 01),
-                "adam@gmail.com"), new Student(
-                "Mateusz",
-                24,
-                LocalDate.of(1982, Month.JANUARY, 04),
-                "matt@wp.pl"
-        ));
+        return studentRepository.findAll();
 
+    }
 
+    public void addStudent(Student student) {
+        Optional<Student> studentByEmail = studentRepository.findStudentByEmail(student.getEmail());
+        if (studentByEmail.isPresent()){
+            throw new IllegalStateException("email taken");
+        }
+        studentRepository.save(student);
+    }
+
+    public void deleteStudent(Long studentId) {
+        boolean exists = studentRepository.existsById(studentId);
+        if (!exists){
+            throw new IllegalStateException("student does not exist with given Id" + studentId);
+        }
+        studentRepository.deleteById(studentId);
     }
 }
